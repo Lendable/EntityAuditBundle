@@ -798,7 +798,7 @@ class AuditReader
             return $this->entityCache[$className][$key][$revision];
         }
 
-        if (!$classMetadata->isInheritanceTypeNone()) {
+        if ($classMetadata->isInheritanceTypeSingleTable()) {
             if (!isset($data[$classMetadata->discriminatorColumn['name']])) {
                 throw new \RuntimeException('Expecting discriminator value in data set.');
             }

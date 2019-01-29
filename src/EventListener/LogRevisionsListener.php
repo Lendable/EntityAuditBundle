@@ -29,6 +29,7 @@ use Doctrine\ORM\Mapping\QuoteStrategy;
 use Doctrine\ORM\Persisters\Entity\EntityPersister;
 use Doctrine\ORM\UnitOfWork;
 use Doctrine\Persistence\Mapping\MappingException;
+use Lendable\Clock\Clock;
 use SimpleThings\EntityAudit\AuditConfiguration;
 use SimpleThings\EntityAudit\AuditManager;
 use SimpleThings\EntityAudit\Metadata\MetadataFactory;
@@ -89,10 +90,16 @@ class LogRevisionsListener implements EventSubscriber
      */
     private $extraUpdates = [];
 
-    public function __construct(AuditManager $auditManager)
+    /**
+     * @var Clock
+     */
+    private $clock;
+
+    public function __construct(AuditManager $auditManager, Clock $clock)
     {
         $this->config = $auditManager->getConfiguration();
         $this->metadataFactory = $auditManager->getMetadataFactory();
+        $this->clock = $clock;
     }
 
     /**
@@ -102,7 +109,7 @@ class LogRevisionsListener implements EventSubscriber
      */
     public function getSubscribedEvents()
     {
-        return [Events::onFlush, Events::postPersist, Events::postUpdate, Events::postFlush];
+        return [Events::onFlush, Events::postPersist, Events::postUpdate, Events::postFlush, Events::onClear];
     }
 
     /**
@@ -245,6 +252,11 @@ class LogRevisionsListener implements EventSubscriber
         $this->saveRevisionEntityData($class, $entityData, 'UPD');
     }
 
+    public function onClear(): void
+    {
+        $this->extraUpdates = [];
+    }
+
     public function onFlush(OnFlushEventArgs $eventArgs): void
     {
         $this->em = $eventArgs->getEntityManager();
@@ -316,7 +328,7 @@ class LogRevisionsListener implements EventSubscriber
             $this->conn->insert(
                 $this->config->getRevisionTableName(),
                 [
-                    'timestamp' => date_create('now'),
+                    'timestamp' => $this->clock->nowMutable(),
                     'username' => $this->config->getCurrentUsername(),
                 ],
                 [
