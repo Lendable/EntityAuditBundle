@@ -60,7 +60,7 @@ class AuditReader
     /**
      * Entity cache to prevent circular references.
      *
-     * @var array
+     * @var EntityCache
      */
     private $entityCache;
 
@@ -97,6 +97,7 @@ class AuditReader
         $this->em = $em;
         $this->config = $config;
         $this->metadataFactory = $factory;
+        $this->entityCache = $entityCache;
         $this->platform = $this->em->getConnection()->getDatabasePlatform();
         $this->quoteStrategy = $this->em->getConfiguration()->getQuoteStrategy();
     }
@@ -186,7 +187,7 @@ class AuditReader
      */
     public function clearEntityCache(): void
     {
-        $this->entityCache = [];
+        $this->entityCache->clear();
     }
 
     /**
@@ -726,9 +727,8 @@ class AuditReader
 
         $key = implode(':', $keyParts);
 
-        if (isset($this->entityCache[$className], $this->entityCache[$className][$key], $this->entityCache[$className][$key][$revision])
-        ) {
-            return $this->entityCache[$className][$key][$revision];
+        if ($this->entityCache->hasEntity($className, $key, $revision)) {
+            return $this->entityCache->getEntity($className, $key, $revision);
         }
 
         if (!$class->isInheritanceTypeNone()) {
@@ -757,7 +757,7 @@ class AuditReader
         }
 
         //cache the entity to prevent circular references
-        $this->entityCache[$className][$key][$revision] = $entity;
+        $this->entityCache->addEntity($className, $key, $revision, $entity);
 
         foreach ($data as $field => $value) {
             if (isset($class->fieldMappings[$field])) {

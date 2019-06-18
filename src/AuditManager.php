@@ -28,10 +28,13 @@ class AuditManager
 
     private $metadataFactory;
 
-    public function __construct(AuditConfiguration $config)
+    private $entityCache;
+
+    public function __construct(AuditConfiguration $config, EntityCache $entityCache)
     {
         $this->config = $config;
         $this->metadataFactory = $config->createMetadataFactory();
+        $this->entityCache = $entityCache;
     }
 
     public function getMetadataFactory()
@@ -46,7 +49,7 @@ class AuditManager
 
     public function createAuditReader(EntityManager $em)
     {
-        return new AuditReader($em, $this->config, $this->metadataFactory);
+        return new AuditReader($em, $this->config, $this->metadataFactory, $this->entityCache);
     }
 
     public function registerEvents(EventManager $evm): void
