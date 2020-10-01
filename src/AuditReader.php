@@ -731,7 +731,7 @@ class AuditReader
             return $this->entityCache->getEntity($className, $key, $revision);
         }
 
-        if (!$class->isInheritanceTypeNone()) {
+        if ($class->isInheritanceTypeSingleTable()) {
             if (!isset($data[$class->discriminatorColumn['name']])) {
                 throw new \RuntimeException('Expecting discriminator value in data set.');
             }
@@ -755,7 +755,6 @@ class AuditReader
         } else {
             $entity = $class->newInstance();
         }
-
         //cache the entity to prevent circular references
         $this->entityCache->addEntity($className, $key, $revision, $entity);
 
