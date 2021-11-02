@@ -33,6 +33,7 @@ use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Persisters\Entity\BasicEntityPersister;
 use Doctrine\ORM\Persisters\Entity\EntityPersister;
+use Lendable\Clock\Clock;
 use SimpleThings\EntityAudit\AuditManager;
 
 class LogRevisionsListener implements EventSubscriber
@@ -88,10 +89,16 @@ class LogRevisionsListener implements EventSubscriber
      */
     private $extraUpdates = array();
 
-    public function __construct(AuditManager $auditManager)
+    /**
+     * @var Clock
+     */
+    private $clock;
+
+    public function __construct(AuditManager $auditManager, Clock $clock)
     {
         $this->config = $auditManager->getConfiguration();
         $this->metadataFactory = $auditManager->getMetadataFactory();
+        $this->clock = $clock;
     }
 
     public function getSubscribedEvents()
@@ -168,7 +175,7 @@ class LogRevisionsListener implements EventSubscriber
                             sprintf('Could not resolve database type for column "%s" during extra updates', $column)
                         );
                     }
-                    
+
                     $types[] = $type;
                 }
 
@@ -318,7 +325,7 @@ class LogRevisionsListener implements EventSubscriber
             $this->conn->insert(
                 $this->config->getRevisionTableName(),
                 array(
-                    'timestamp' => date_create('now'),
+                    'timestamp' => $this->clock->nowMutable(),
                     'username' => $this->config->getCurrentUsername(),
                 ),
                 array(
