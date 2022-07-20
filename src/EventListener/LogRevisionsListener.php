@@ -154,13 +154,15 @@ class LogRevisionsListener implements EventSubscriber
                     ));
                 } elseif (isset($meta->associationMappings[$idField])) {
                     $foreignEntity = $meta->reflFields[$idField]->getValue($entity);
-                    $foreignMeta = $em->getClassMetadata(get_class($foreignEntity));
+                    $foreignMeta = $em->getClassMetadata(\get_class($foreignEntity));
                     $foreignIdFields = $foreignMeta->identifier;
-                    if (count($foreignIdFields) > 1) {
+                    if (\count($foreignIdFields) > 1) {
                         // This is not supported by Doctrine, so this should never happen, but just in case..
                         throw new \Exception(
-                            sprintf('Identifier field "%s" refers to a foreign entity with a composite primary key',
-                                $idField)
+                            sprintf(
+                                'Identifier field "%s" refers to a foreign entity with a composite primary key',
+                                $idField
+                            )
                         );
                     }
 
@@ -269,7 +271,7 @@ class LogRevisionsListener implements EventSubscriber
         $processedEntities = [];
 
         foreach ($this->uow->getScheduledEntityDeletions() as $entity) {
-            //doctrine is fine deleting elements multiple times. We are not.
+            // doctrine is fine deleting elements multiple times. We are not.
             $hash = $this->getHash($entity);
 
             if (\in_array($hash, $processedEntities, true)) {
@@ -338,7 +340,7 @@ class LogRevisionsListener implements EventSubscriber
                 ]
             );
 
-        $sequenceName = $this->platform->supportsSequences()
+            $sequenceName = $this->platform->supportsSequences()
             ? $this->platform->getIdentitySequenceName($tableName, 'id')
             : null;
 
@@ -582,25 +584,23 @@ class LogRevisionsListener implements EventSubscriber
     }
 
     /**
-     * @param EntityManager $em
-     * @param ClassMetadata $meta
-     * @param string        $column
-     * @param string        $fieldName
-     *
-     * @return string
+     * @param string $column
+     * @param string $fieldName
      *
      * @throws \Exception
+     *
+     * @return string
      */
-    private function getFieldType(EntityManager $em, ClassMetadata $meta, $column, $fieldName)
+    private function getFieldType(EntityManagerInterface $em, ClassMetadata $meta, $column, $fieldName)
     {
-        if (in_array($column, $meta->columnNames)) {
+        if (\in_array($column, $meta->columnNames, true)) {
             return $meta->getTypeOfField($fieldName);
         }
 
         foreach ($meta->associationMappings as $mapping) {
             if (isset($mapping['joinColumns'])) {
                 foreach ($mapping['joinColumns'] as $definition) {
-                    if ($definition['name'] == $column) {
+                    if ($definition['name'] === $column) {
                         $targetTable = $em->getClassMetadata($mapping['targetEntity']);
 
                         return $targetTable->getTypeOfColumn($definition['referencedColumnName']);
