@@ -30,7 +30,7 @@ class AuditedCollection implements Collection
     /**
      * Related audit reader instance.
      *
-     * @var AuditReader<T>
+     * @var AuditReader
      */
     protected $auditReader;
 
@@ -53,7 +53,7 @@ class AuditedCollection implements Collection
     /**
      * Maximum revision to fetch.
      *
-     * @var string
+     * @var string|int
      */
     protected $revision;
 
@@ -65,7 +65,7 @@ class AuditedCollection implements Collection
     /**
      * @var ClassMetadataInfo
      *
-     * @phpstan-var ClassMetadataInfo<T> $metadata
+     * @phpstan-var ClassMetadataInfo<T>
      */
     protected $metadata;
 
@@ -74,7 +74,8 @@ class AuditedCollection implements Collection
      * initialized yet or contain identifiers to load the entities.
      *
      * @var Collection<int|string, array>
-     * @phpstan-var Collection<TKey, array{keys: array, rev: string|int}>
+     *
+     * @phpstan-var Collection<TKey, array{keys: array<string, int|string>, rev: string|int}>
      */
     protected $entities;
 
@@ -83,6 +84,7 @@ class AuditedCollection implements Collection
      * been loaded yet or contain audited entities.
      *
      * @var Collection<int|string, object>
+     *
      * @phpstan-var Collection<TKey, T>
      */
     protected $loadedEntities;
@@ -103,8 +105,9 @@ class AuditedCollection implements Collection
      * @param string               $class
      * @param array<string, mixed> $associationDefinition
      * @param array<string, mixed> $foreignKeys
+     * @param string|int           $revision
      *
-     * @phpstan-param AuditReader<T> $auditReader
+     * @phpstan-param AuditReader $auditReader
      * @phpstan-param class-string<T> $class
      * @phpstan-param ClassMetadataInfo<T> $classMeta
      */
@@ -122,7 +125,7 @@ class AuditedCollection implements Collection
     }
 
     /**
-     * @return bool
+     * @return true
      */
     public function add($element)
     {
@@ -150,6 +153,7 @@ class AuditedCollection implements Collection
      * @return bool
      *
      * @psalm-mutation-free See https://github.com/psalm/psalm-plugin-doctrine/issues/97
+     *
      * @psalm-suppress ImpureMethodCall
      */
     public function isEmpty()
@@ -160,7 +164,7 @@ class AuditedCollection implements Collection
     }
 
     /**
-     * @return object|null
+     * @return T|null
      */
     public function remove($key)
     {
@@ -198,7 +202,7 @@ class AuditedCollection implements Collection
     /**
      * @return array
      *
-     * @phpstan-return array<TKey>
+     * @phpstan-return list<TKey>
      */
     public function getKeys()
     {
@@ -210,7 +214,7 @@ class AuditedCollection implements Collection
     /**
      * @return object[]
      *
-     * @phpstan-return array<T>
+     * @phpstan-return list<T>
      */
     public function getValues()
     {
@@ -261,7 +265,7 @@ class AuditedCollection implements Collection
     }
 
     /**
-     * @return int|string|null
+     * @return TKey|null
      */
     public function key()
     {
@@ -359,7 +363,7 @@ class AuditedCollection implements Collection
     }
 
     /**
-     * @return int|string|bool
+     * @return TKey|false
      */
     public function indexOf($element)
     {
@@ -381,7 +385,7 @@ class AuditedCollection implements Collection
     }
 
     /**
-     * @return \Traversable
+     * @return \Traversable<TKey, T>
      */
     #[\ReturnTypeWillChange]
     public function getIterator()
@@ -411,7 +415,10 @@ class AuditedCollection implements Collection
     public function offsetGet($offset)
     {
         if ($this->loadedEntities->offsetExists($offset)) {
-            return $this->loadedEntities->offsetGet($offset);
+            $entity = $this->loadedEntities->offsetGet($offset);
+            \assert(null !== $entity);
+
+            return $entity;
         }
 
         $this->initialize();
@@ -421,6 +428,7 @@ class AuditedCollection implements Collection
         }
 
         $entity = $this->entities->offsetGet($offset);
+        \assert(null !== $entity);
         $resolvedEntity = $this->resolve($entity);
         $this->loadedEntities->offsetSet($offset, $resolvedEntity);
 
@@ -438,7 +446,9 @@ class AuditedCollection implements Collection
     }
 
     /**
-     * @return int
+     * @return int<0, max>
+     *
+     * @psalm-suppress LessSpecificReturnStatement, MoreSpecificReturnType, UnusedPsalmSuppress
      */
     #[\ReturnTypeWillChange]
     public function count()
@@ -457,11 +467,17 @@ class AuditedCollection implements Collection
      */
     protected function resolve($entity)
     {
-        return $this->auditReader->find(
+        $object = $this->auditReader->find(
             $this->class,
             $entity['keys'],
             $this->revision
         );
+
+        if (null === $object) {
+            throw new AuditedCollectionException('Cannot resolve the entity.');
+        }
+
+        return $object;
     }
 
     protected function forceLoad(): void
@@ -496,18 +512,18 @@ class AuditedCollection implements Collection
             $params[] = $value;
         }
 
-        //we check for revisions greater than current belonging to other entities
+        // we check for revisions greater than current belonging to other entities
         $sql .= 'AND NOT EXISTS (SELECT * FROM '.$this->configuration->getTableName($this->metadata).' st WHERE';
 
-        //ids
+        // ids
         foreach ($this->metadata->getIdentifierColumnNames() as $name) {
             $sql .= ' st.'.$name.' = t.'.$name.' AND';
         }
 
-        //foreigns
+        // foreigns
         $sql .= ' ((';
 
-        //master entity query, not equals
+        // master entity query, not equals
         $notEqualParts = $nullParts = [];
         foreach ($this->foreignKeys as $column => $value) {
             $notEqualParts[] = $column.' <> ?';
@@ -517,22 +533,22 @@ class AuditedCollection implements Collection
 
         $sql .= implode(' AND ', $notEqualParts).') OR ('.implode(' AND ', $nullParts).'))';
 
-        //revision
+        // revision
         $sql .= ' AND st.'.$this->configuration->getRevisionFieldName().' <= '.$this->revision;
         $sql .= ' AND st.'.$this->configuration->getRevisionFieldName().' > t.'.$this->configuration->getRevisionFieldName();
 
         $sql .= ') ';
-        //end of check for for belonging to other entities
+        // end of check for for belonging to other entities
 
-        //check for deleted revisions older than requested
+        // check for deleted revisions older than requested
         $sql .= 'AND NOT EXISTS (SELECT * FROM '.$this->configuration->getTableName($this->metadata).' sd WHERE';
 
-        //ids
+        // ids
         foreach ($this->metadata->getIdentifierColumnNames() as $name) {
             $sql .= ' sd.'.$name.' = t.'.$name.' AND';
         }
 
-        //revision
+        // revision
         $sql .= ' sd.'.$this->configuration->getRevisionFieldName().' <= '.$this->revision;
         $sql .= ' AND sd.'.$this->configuration->getRevisionFieldName().' > t.'.$this->configuration->getRevisionFieldName();
 
@@ -540,7 +556,7 @@ class AuditedCollection implements Collection
         $params[] = 'DEL';
 
         $sql .= ') ';
-        //end check for deleted revisions older than requested
+        // end check for deleted revisions older than requested
 
         $sql .= 'AND '.$this->configuration->getRevisionTypeFieldName().' <> ? ';
         $params[] = 'DEL';
@@ -552,6 +568,7 @@ class AuditedCollection implements Collection
         $sql .= ' GROUP BY '.implode(', ', $groupBy);
         $sql .= ' ORDER BY '.implode(' ASC, ', $this->metadata->getIdentifierColumnNames()).' ASC';
 
+        /** @var array<array<string, int|string>> $rows */
         $rows = $this->auditReader->getConnection()->fetchAllAssociative($sql, $params);
 
         foreach ($rows as $row) {
@@ -564,6 +581,7 @@ class AuditedCollection implements Collection
             $entity['keys'] = $row;
 
             if (isset($this->associationDefinition['indexBy'])) {
+                /** @var TKey $key */
                 $key = $row[$this->associationDefinition['indexBy']];
                 unset($entity['keys'][$this->associationDefinition['indexBy']]);
                 $this->entities->offsetSet($key, $entity);

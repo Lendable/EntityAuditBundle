@@ -20,7 +20,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * @ORM\Entity
  */
-class OwnedEntity3
+class OwnedEntity4
 {
     /**
      * @var int|null
@@ -41,9 +41,13 @@ class OwnedEntity3
     /**
      * @var Collection<int, OwnerEntity>
      *
-     * @ORM\ManyToMany(targetEntity="OwnerEntity", mappedBy="owned3")
+     * @ORM\ManyToMany(targetEntity="OwnerEntity", inversedBy="ownedInverse")
+     * @ORM\JoinTable(name="owner_owned4",
+     *   joinColumns={@ORM\JoinColumn(name="owned4_id", referencedColumnName="strange_owned_id_name")},
+     *   inverseJoinColumns={@ORM\JoinColumn(name="owner_id", referencedColumnName="some_strange_key_name")}
+     * )
      */
-    protected $owners;
+    protected Collection $owners;
 
     public function __construct()
     {
@@ -66,7 +70,7 @@ class OwnedEntity3
     }
 
     /**
-     * @return Collection<int, OwnerEntity>
+     * @psalm-return Collection<int, OwnerEntity>
      */
     public function getOwners(): Collection
     {
@@ -75,6 +79,8 @@ class OwnedEntity3
 
     public function addOwner(OwnerEntity $owner): void
     {
-        $this->owners[] = $owner;
+        if (false === $this->owners->contains($owner)) {
+            $this->owners->add($owner);
+        }
     }
 }

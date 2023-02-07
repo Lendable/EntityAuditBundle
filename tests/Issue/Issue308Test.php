@@ -40,11 +40,16 @@ final class Issue308Test extends BaseTest
 
         $auditReader = $this->auditManager->createAuditReader($this->em);
         $auditReader->setLoadAuditedCollections(true);
-        $userClass = \get_class($user);
-        $revisions = $auditReader->findRevisions($userClass, $user->getId());
+
+        $userId = $user->getId();
+        static::assertNotNull($userId);
+
+        $revisions = $auditReader->findRevisions(Issue308User::class, $userId);
         static::assertCount(1, $revisions);
         $revision = reset($revisions);
-        $auditedUser = $auditReader->find($userClass, ['id' => $user->getId()], $revision->getRev());
+        static::assertNotFalse($revision);
+        $auditedUser = $auditReader->find(Issue308User::class, ['id' => $userId], $revision->getRev());
+        static::assertNotNull($auditedUser);
 
         static::assertInstanceOf(Collection::class, $auditedUser->getChildren());
     }

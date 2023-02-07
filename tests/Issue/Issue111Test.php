@@ -35,15 +35,16 @@ final class Issue111Test extends BaseTest
         $e->setStatus('test status');
 
         $this->em->persist($e);
-        $this->em->flush(); //#1
+        $this->em->flush(); // #1
 
         $this->em->remove($e);
-        $this->em->flush(); //#2
+        $this->em->flush(); // #2
 
         $reader = $this->auditManager->createAuditReader($this->em);
 
         $ae = $reader->find(Issue111Entity::class, 1, 2);
+        static::assertNotNull($ae);
 
-        static::assertInstanceOf('DateTime', $ae->getDeletedAt());
+        static::assertInstanceOf(\DateTime::class, $ae->getDeletedAt());
     }
 }

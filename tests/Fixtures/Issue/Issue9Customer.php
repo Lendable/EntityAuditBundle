@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -35,14 +36,17 @@ class Issue9Customer
      *
      * @ORM\OneToMany(targetEntity="Issue9Address", mappedBy="customer")
      */
-    private $addresses;
+    private Collection $addresses;
 
     /**
-     * @var Issue9Address|null
-     *
      * @ORM\OneToOne(targetEntity="Issue9Address")
      */
-    private $primaryAddress;
+    private ?Issue9Address $primaryAddress = null;
+
+    public function __construct()
+    {
+        $this->addresses = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {

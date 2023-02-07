@@ -35,6 +35,7 @@ class Page
      * A page can have many aliases.
      *
      * @var Collection<int, PageAlias>
+     *
      * @ORM\OneToMany(targetEntity="PageAlias", mappedBy="page", cascade={"persist"})
      */
     protected $pageAliases;
@@ -72,6 +73,6 @@ class Page
     public function addLocalization(PageLocalization $localization): void
     {
         $localization->setPage($this);
-        $this->localizations->set($localization->getLocale(), $localization);
+        $this->localizations->set($localization->getLocale() ?? '', $localization);
     }
 }

@@ -11,42 +11,45 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace SimpleThings\EntityAudit\Tests\Fixtures\PHP81Issue;
 
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity
  */
-class Issue318User
+class IssueEntityWithEnum
 {
     /**
-     * @var int|null
-     *
      * @ORM\Id
      * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    protected $id;
+    private ?int $id = null;
 
     /**
-     * @ORM\Column(type="string", nullable=false, length=255)
+     * @ORM\Column(enumType="Status::class")
      */
-    private ?string $alias = null;
+    private Status $status;
+
+    public function __construct(Status $status)
+    {
+        $this->status = $status;
+    }
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getAlias(): ?string
+    public function getStatus(): Status
     {
-        return $this->alias;
+        return $this->status;
     }
 
-    public function setAlias(string $alias): self
+    public function setStatus(Status $status): self
     {
-        $this->alias = $alias;
+        $this->status = $status;
 
         return $this;
     }

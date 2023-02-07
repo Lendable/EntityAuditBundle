@@ -11,12 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Exception;
+namespace SimpleThings\EntityAudit\Tests\Fixtures\PHP81Issue;
 
-class NotAuditedException extends AuditException
+enum Status: string
 {
-    public function __construct(string $className)
-    {
-        parent::__construct($className, null, null, sprintf('Class "%s" is not audited.', $className));
-    }
+    case Foo = 'bar';
+    case Qwe = 'baz';
 }

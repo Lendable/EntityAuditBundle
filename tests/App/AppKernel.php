@@ -30,11 +30,6 @@ final class AppKernel extends Kernel
 {
     use MicroKernelTrait;
 
-    public function __construct()
-    {
-        parent::__construct('test', false);
-    }
-
     public function registerBundles(): iterable
     {
         return [
@@ -74,6 +69,8 @@ final class AppKernel extends Kernel
 
     protected function configureContainer(ContainerBuilder $containerBuilder, LoaderInterface $loader): void
     {
+        $containerBuilder->setParameter('app.base_dir', $this->getBaseDir());
+
         $loader->load(__DIR__.'/config/config.yml');
 
         if (class_exists(InputBag::class)) {
