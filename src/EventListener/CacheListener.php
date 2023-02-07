@@ -19,10 +19,7 @@ use SimpleThings\EntityAudit\AuditReader;
 
 class CacheListener implements EventSubscriber
 {
-    /**
-     * @var AuditReader
-     */
-    private $auditReader;
+    private AuditReader $auditReader;
 
     public function __construct(AuditReader $auditReader)
     {
