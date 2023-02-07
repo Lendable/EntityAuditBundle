@@ -102,11 +102,6 @@ class LogRevisionsListener implements EventSubscriber
         $this->clock = $clock;
     }
 
-    /**
-     * @todo Remove the "@return array" docblock when support for "symfony/error-handler" 5.x is dropped.
-     *
-     * @return array
-     */
     public function getSubscribedEvents()
     {
         return [Events::onFlush, Events::postPersist, Events::postUpdate, Events::postFlush, Events::onClear];
@@ -122,6 +117,7 @@ class LogRevisionsListener implements EventSubscriber
         $em = $eventArgs->getEntityManager();
         $quoteStrategy = $em->getConfiguration()->getQuoteStrategy();
         $uow = $em->getUnitOfWork();
+        $connection = $em->getConnection();
 
         foreach ($this->extraUpdates as $entity) {
             $className = \get_class($entity);
@@ -134,81 +130,87 @@ class LogRevisionsListener implements EventSubscriber
                 continue;
             }
 
+            $queryBuilder = $connection->createQueryBuilder();
+            $queryBuilder
+                ->update($this->config->getTableName($meta))
+                ->where(sprintf(
+                    '%s = %s',
+                    $this->config->getRevisionFieldName(),
+                    $queryBuilder->createNamedParameter(
+                        $this->getRevisionId(),
+                        $this->config->getRevisionIdFieldType()
+                    )
+                ));
+
+            foreach ($meta->identifier as $idField) {
+                if (isset($meta->fieldMappings[$idField])) {
+                    $queryBuilder->andWhere(sprintf(
+                        '%s = %s',
+                        $meta->fieldMappings[$idField]['columnName'],
+                        $queryBuilder->createNamedParameter(
+                            $meta->reflFields[$idField]->getValue($entity),
+                            $meta->fieldMappings[$idField]['type']
+                        )
+                    ));
+                } elseif (isset($meta->associationMappings[$idField])) {
+                    $foreignEntity = $meta->reflFields[$idField]->getValue($entity);
+                    $foreignMeta = $em->getClassMetadata(\get_class($foreignEntity));
+                    $foreignIdFields = $foreignMeta->identifier;
+                    if (\count($foreignIdFields) > 1) {
+                        // This is not supported by Doctrine, so this should never happen, but just in case..
+                        throw new \Exception(
+                            sprintf(
+                                'Identifier field "%s" refers to a foreign entity with a composite primary key',
+                                $idField
+                            )
+                        );
+                    }
+
+                    $columnName = $meta->associationMappings[$idField]['joinColumns'][0];
+                    if (\is_array($columnName)) {
+                        if (!isset($columnName['name'])) {
+                            // Not much we can do to recover this - we need a column name...
+                            throw new MappingException('Column name not set within meta');
+                        }
+
+                        $columnName = $columnName['name'];
+                    }
+
+                    $queryBuilder->andWhere(sprintf(
+                        '%s = %s',
+                        $columnName,
+                        $queryBuilder->createNamedParameter(
+                            $foreignMeta->reflFields[$foreignIdFields[0]]->getValue($foreignEntity),
+                            $meta->associationMappings[$idField]['type']
+                        )
+                    ));
+                }
+            }
+
             foreach ($updateData[$meta->table['name']] as $column => $value) {
                 $field = $meta->getFieldName($column);
                 $fieldName = $meta->getFieldForColumn($column);
-                $placeholder = '?';
+
+                $placeholder = $queryBuilder->createNamedParameter(
+                    $value,
+                    $this->getFieldType($em, $meta, $column, $fieldName)
+                );
+
                 if ($meta->hasField($fieldName)) {
                     $field = $quoteStrategy->getColumnName($field, $meta, $this->platform);
                     $fieldType = $meta->getTypeOfField($field);
                     if (null !== $fieldType) {
                         $type = Type::getType($fieldType);
                         if ($type->canRequireSQLConversion()) {
-                            $placeholder = $type->convertToDatabaseValueSQL('?', $this->platform);
+                            $placeholder = $type->convertToDatabaseValueSQL($placeholder, $this->platform);
                         }
                     }
                 }
 
-                $sql = 'UPDATE '.$this->config->getTableName($meta).' '.
-                    'SET '.$field.' = '.$placeholder.' '.
-                    'WHERE '.$this->config->getRevisionFieldName().' = ? ';
-
-                $params = [$value, $this->getRevisionId()];
-
-                $types = [];
-
-                if (\array_key_exists($column, $meta->fieldNames)) {
-                    $types[] = $meta->getTypeOfField($fieldName);
-                } else {
-                    //try to find column in association mappings
-                    $type = null;
-
-                    foreach ($meta->associationMappings as $mapping) {
-                        if (isset($mapping['joinColumns'])) {
-                            foreach ($mapping['joinColumns'] as $definition) {
-                                if ($definition['name'] === $column) {
-                                    $targetTable = $em->getClassMetadata($mapping['targetEntity']);
-                                    $type = $targetTable->getTypeOfField($targetTable->getFieldForColumn($definition['referencedColumnName']));
-                                }
-                            }
-                        }
-                    }
-
-                    if (null === $type) {
-                        throw new \Exception(sprintf('Could not resolve database type for column "%s" during extra updates', $column));
-                    }
-
-                    $types[] = $type;
-                }
-
-                $types[] = $this->config->getRevisionIdFieldType();
-
-                foreach ($meta->identifier as $idField) {
-                    if (isset($meta->fieldMappings[$idField])) {
-                        $columnName = $meta->fieldMappings[$idField]['columnName'];
-                        $types[] = $meta->fieldMappings[$idField]['type'];
-                    } elseif (isset($meta->associationMappings[$idField])) {
-                        $columnName = $meta->associationMappings[$idField]['joinColumns'][0];
-                        if (\is_array($columnName)) {
-                            if (!isset($columnName['name'])) {
-                                // Not much we can do to recover this - we need a column name...
-                                throw new MappingException('Column name not set within meta');
-                            }
-
-                            $columnName = $columnName['name'];
-                        }
-                        $types[] = $meta->associationMappings[$idField]['type'];
-                    }
-
-                    $params[] = $meta->reflFields[$idField]->getValue($entity);
-
-                    \assert(isset($columnName));
-
-                    $sql .= ' AND '.$columnName.' = ?';
-                }
-
-                $this->em->getConnection()->executeQuery($sql, $params, $types);
+                $queryBuilder->set($field, $placeholder);
             }
+
+            $queryBuilder->execute();
         }
     }
 
@@ -269,7 +271,7 @@ class LogRevisionsListener implements EventSubscriber
         $processedEntities = [];
 
         foreach ($this->uow->getScheduledEntityDeletions() as $entity) {
-            //doctrine is fine deleting elements multiple times. We are not.
+            // doctrine is fine deleting elements multiple times. We are not.
             $hash = $this->getHash($entity);
 
             if (\in_array($hash, $processedEntities, true)) {
@@ -325,8 +327,9 @@ class LogRevisionsListener implements EventSubscriber
     private function getRevisionId()
     {
         if (null === $this->revisionId) {
+            $tableName = $this->config->getRevisionTableName();
             $this->conn->insert(
-                $this->config->getRevisionTableName(),
+                $tableName,
                 [
                     'timestamp' => $this->clock->nowMutable(),
                     'username' => $this->config->getCurrentUsername(),
@@ -338,8 +341,8 @@ class LogRevisionsListener implements EventSubscriber
             );
 
             $sequenceName = $this->platform->supportsSequences()
-                ? $this->platform->getIdentitySequenceName($this->config->getRevisionTableName(), 'id')
-                : null;
+            ? $this->platform->getIdentitySequenceName($tableName, 'id')
+            : null;
 
             $this->revisionId = $this->conn->lastInsertId($sequenceName);
         }
@@ -578,5 +581,36 @@ class LogRevisionsListener implements EventSubscriber
         }
 
         return $result;
+    }
+
+    /**
+     * @param string $column
+     * @param string $fieldName
+     *
+     * @throws \Exception
+     *
+     * @return string
+     */
+    private function getFieldType(EntityManagerInterface $em, ClassMetadata $meta, $column, $fieldName)
+    {
+        if (\in_array($column, $meta->columnNames, true)) {
+            return $meta->getTypeOfField($fieldName);
+        }
+
+        foreach ($meta->associationMappings as $mapping) {
+            if (isset($mapping['joinColumns'])) {
+                foreach ($mapping['joinColumns'] as $definition) {
+                    if ($definition['name'] === $column) {
+                        $targetTable = $em->getClassMetadata($mapping['targetEntity']);
+
+                        return $targetTable->getTypeOfColumn($definition['referencedColumnName']);
+                    }
+                }
+            }
+        }
+
+        throw new \Exception(
+            sprintf('Could not resolve database type for column "%s" during extra updates', $column)
+        );
     }
 }
