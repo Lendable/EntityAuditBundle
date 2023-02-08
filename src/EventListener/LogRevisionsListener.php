@@ -16,7 +16,6 @@ namespace SimpleThings\EntityAudit\EventListener;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
@@ -719,6 +718,7 @@ class LogRevisionsListener implements EventSubscriber
 
     /**
      * @param ClassMetadata<object> $meta
+     *
      * @throws \Exception
      */
     private function getFieldType(EntityManagerInterface $em, ClassMetadata $meta, string $column, string $fieldName): string
