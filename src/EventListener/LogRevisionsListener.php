@@ -16,6 +16,7 @@ namespace SimpleThings\EntityAudit\EventListener;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManagerInterface;
@@ -121,6 +122,8 @@ class LogRevisionsListener implements EventSubscriber
 
             foreach ($meta->identifier as $idField) {
                 if (isset($meta->fieldMappings[$idField])) {
+                    \assert(null !== $meta->reflFields[$idField]);
+
                     $queryBuilder->andWhere(sprintf(
                         '%s = %s',
                         $meta->fieldMappings[$idField]['columnName'],
@@ -130,7 +133,11 @@ class LogRevisionsListener implements EventSubscriber
                         )
                     ));
                 } elseif (isset($meta->associationMappings[$idField])) {
+                    \assert(null !== $meta->reflFields[$idField]);
+
                     $foreignEntity = $meta->reflFields[$idField]->getValue($entity);
+                    \assert(\is_object($foreignEntity));
+
                     $foreignMeta = $em->getClassMetadata(\get_class($foreignEntity));
                     $foreignIdFields = $foreignMeta->identifier;
                     if (\count($foreignIdFields) > 1) {
@@ -143,15 +150,14 @@ class LogRevisionsListener implements EventSubscriber
                         );
                     }
 
-                    $columnName = $meta->associationMappings[$idField]['joinColumns'][0];
-                    if (\is_array($columnName)) {
-                        if (!isset($columnName['name'])) {
-                            // Not much we can do to recover this - we need a column name...
-                            throw new MappingException('Column name not set within meta');
-                        }
-
-                        $columnName = $columnName['name'];
+                    if (!isset($meta->associationMappings[$idField]['joinColumns'])) {
+                        // Not much we can do to recover this - we need a column name...
+                        throw new MappingException('Column name not set within meta');
                     }
+
+                    $columnName = $meta->associationMappings[$idField]['joinColumns'][0]['name'];
+
+                    \assert(null !== $foreignMeta->reflFields[$foreignIdFields[0]]);
 
                     $queryBuilder->andWhere(sprintf(
                         '%s = %s',
@@ -712,17 +718,13 @@ class LogRevisionsListener implements EventSubscriber
     }
 
     /**
-     * @param string $column
-     * @param string $fieldName
-     *
+     * @param ClassMetadata<object> $meta
      * @throws \Exception
-     *
-     * @return string
      */
-    private function getFieldType(EntityManagerInterface $em, ClassMetadata $meta, $column, $fieldName)
+    private function getFieldType(EntityManagerInterface $em, ClassMetadata $meta, string $column, string $fieldName): string
     {
         if (\in_array($column, $meta->columnNames, true)) {
-            return $meta->getTypeOfField($fieldName);
+            return $meta->getTypeOfField($fieldName) ?? Types::STRING;
         }
 
         foreach ($meta->associationMappings as $mapping) {
@@ -731,7 +733,7 @@ class LogRevisionsListener implements EventSubscriber
                     if ($definition['name'] === $column) {
                         $targetTable = $em->getClassMetadata($mapping['targetEntity']);
 
-                        return $targetTable->getTypeOfColumn($definition['referencedColumnName']);
+                        return $targetTable->getTypeOfColumn($definition['referencedColumnName']) ?? Types::STRING;
                     }
                 }
             }
