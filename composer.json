@@ -64,7 +64,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "SimpleThings\\EntityAudit\\Tests\\": "tests"
+            "Sonata\\EntityAuditBundle\\Tests\\": "tests"
         }
     },
     "config": {

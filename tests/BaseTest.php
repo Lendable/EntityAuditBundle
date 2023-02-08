@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests;
+namespace Sonata\EntityAuditBundle\Tests;
 
 use Doctrine\Common\Proxy\AbstractProxyFactory;
 use Doctrine\DBAL\Connection;
@@ -95,7 +95,7 @@ abstract class BaseTest extends TestCase
         $config->setQueryCache(new ArrayAdapter());
         $config->setProxyDir(__DIR__.'/Proxies');
         $config->setAutoGenerateProxyClasses(AbstractProxyFactory::AUTOGENERATE_EVAL);
-        $config->setProxyNamespace('SimpleThings\EntityAudit\Tests\Proxies');
+        $config->setProxyNamespace('Sonata\EntityAuditBundle\Tests\Proxies');
 
         $mappingPaths = [
             __DIR__.'/Fixtures/Core',

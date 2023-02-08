@@ -20,7 +20,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
         ->defaults()
         ->autowire()
         ->autoconfigure()
-        ->load('SimpleThings\\EntityAudit\\Tests\\App\\DataFixtures\\', dirname(__DIR__).'/DataFixtures');
+        ->load('Sonata\\EntityAuditBundle\\Tests\\App\\DataFixtures\\', dirname(__DIR__).'/DataFixtures');
 
     $containerConfigurator->services()->set(Clock::class, SystemClock::class);
 };

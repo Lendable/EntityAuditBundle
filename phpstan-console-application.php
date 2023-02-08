@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-use SimpleThings\EntityAudit\Tests\App\AppKernel;
+use Sonata\EntityAuditBundle\Tests\App\AppKernel;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 
 require __DIR__.'/vendor/autoload.php';

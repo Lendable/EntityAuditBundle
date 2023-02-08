@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Issue;
 
-use SimpleThings\EntityAudit\Tests\BaseTest;
-use SimpleThings\EntityAudit\Tests\Fixtures\PHP81Issue\IssueEntityWithEnum;
-use SimpleThings\EntityAudit\Tests\Fixtures\PHP81Issue\Status;
+use Sonata\EntityAuditBundle\Tests\BaseTest;
+use Sonata\EntityAuditBundle\Tests\Fixtures\PHP81Issue\IssueEntityWithEnum;
+use Sonata\EntityAuditBundle\Tests\Fixtures\PHP81Issue\Status;
 
 /**
  * @requires PHP 8.1

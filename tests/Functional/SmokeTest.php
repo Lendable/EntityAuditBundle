@@ -11,9 +11,9 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Functional;
+namespace Sonata\EntityAuditBundle\Tests\Functional;
 
-use SimpleThings\EntityAudit\Tests\App\Entity\User;
+use Sonata\EntityAuditBundle\Tests\App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

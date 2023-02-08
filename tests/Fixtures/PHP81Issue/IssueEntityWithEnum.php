@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\PHP81Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\PHP81Issue;
 
 use Doctrine\ORM\Mapping as ORM;
 

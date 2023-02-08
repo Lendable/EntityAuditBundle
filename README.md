@@ -129,8 +129,8 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\Common\EventManager;
 use SimpleThings\EntityAudit\AuditConfiguration;
 use SimpleThings\EntityAudit\AuditManager;
-use SimpleThings\EntityAudit\Tests\ArticleAudit;
-use SimpleThings\EntityAudit\Tests\UserAudit;
+use Sonata\EntityAuditBundle\Tests\ArticleAudit;
+use Sonata\EntityAuditBundle\Tests\UserAudit;
 
 $auditConfig = new AuditConfiguration();
 $auditConfig->setAuditedEntityClasses([ArticleAudit::class, UserAudit::class]);
@@ -174,7 +174,7 @@ to that entity was made in a revision before the given one:
 
 ```php
 $articleAudit = $auditReader->find(
-    SimpleThings\EntityAudit\Tests\ArticleAudit::class,
+    Sonata\EntityAuditBundle\Tests\ArticleAudit::class,
     $id = 1,
     $rev = 10
 );
@@ -188,7 +188,7 @@ in that old version.
 
 ```php
 $revisions = $auditReader->findRevisions(
-    SimpleThings\EntityAudit\Tests\ArticleAudit::class,
+    Sonata\EntityAuditBundle\Tests\ArticleAudit::class,
     $id = 1
 );
 ```
@@ -226,7 +226,7 @@ class ChangedEntity
 
 ```php
 $revision = $auditReader->getCurrentRevision(
-    'SimpleThings\EntityAudit\Tests\ArticleAudit',
+    'Sonata\EntityAuditBundle\Tests\ArticleAudit',
     $id = 3
 );
 ```
