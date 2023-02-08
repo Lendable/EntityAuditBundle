@@ -156,13 +156,15 @@ class LogRevisionsListener implements EventSubscriber
 
                     $columnName = $meta->associationMappings[$idField]['joinColumns'][0]['name'];
 
-                    \assert(null !== $foreignMeta->reflFields[$foreignIdFields[0]]);
+                    $reflField = $foreignMeta->reflFields[$foreignIdFields[0]];
+
+                    \assert(null !== $reflField);
 
                     $queryBuilder->andWhere(sprintf(
                         '%s = %s',
                         $columnName,
                         $queryBuilder->createNamedParameter(
-                            $foreignMeta->reflFields[$foreignIdFields[0]]->getValue($foreignEntity),
+                            $reflField->getValue($foreignEntity),
                             $meta->associationMappings[$idField]['type']
                         )
                     ));
