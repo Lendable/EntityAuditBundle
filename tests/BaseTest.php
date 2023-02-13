@@ -22,9 +22,8 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Tools\SchemaTool;
 use Gedmo\DoctrineExtensions;
-use Lendable\Clock\Clock;
-use Lendable\Clock\SystemClock;
 use PHPUnit\Framework\TestCase;
+use Psr\Clock\ClockInterface;
 use SimpleThings\EntityAudit\AuditConfiguration;
 use SimpleThings\EntityAudit\AuditManager;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
@@ -179,9 +178,9 @@ abstract class BaseTest extends TestCase
         return $this->auditManager = $auditManager;
     }
 
-    protected function getClock(): Clock
+    protected function getClock(): ?ClockInterface
     {
-        return new SystemClock();
+        return null;
     }
 
     protected function setUpEntitySchema(): void
