@@ -11,8 +11,6 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-use Lendable\Clock\Clock;
-use Lendable\Clock\SystemClock;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return static function (ContainerConfigurator $containerConfigurator): void {
@@ -21,6 +19,4 @@ return static function (ContainerConfigurator $containerConfigurator): void {
         ->autowire()
         ->autoconfigure()
         ->load('Sonata\\EntityAuditBundle\\Tests\\App\\DataFixtures\\', dirname(__DIR__).'/DataFixtures');
-
-    $containerConfigurator->services()->set(Clock::class, SystemClock::class);
 };
