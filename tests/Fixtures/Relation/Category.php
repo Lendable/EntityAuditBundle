@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Relation;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Relation;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -30,7 +30,7 @@ abstract class Category extends SomeEntity
      *
      * @ORM\OneToMany(targetEntity="Product", mappedBy="category")
      */
-    private $products;
+    private Collection $products;
 
     public function __construct()
     {

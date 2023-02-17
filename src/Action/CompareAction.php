@@ -20,15 +20,9 @@ use Twig\Environment;
 
 final class CompareAction
 {
-    /**
-     * @var AuditReader
-     */
-    private $auditReader;
+    private AuditReader $auditReader;
 
-    /**
-     * @var Environment
-     */
-    private $twig;
+    private Environment $twig;
 
     public function __construct(Environment $twig, AuditReader $auditReader)
     {
@@ -36,14 +30,19 @@ final class CompareAction
         $this->auditReader = $auditReader;
     }
 
+    /**
+     * @phpstan-param class-string $className
+     */
     public function __invoke(Request $request, string $className, string $id, ?int $oldRev = null, ?int $newRev = null): Response
     {
         if (null === $oldRev) {
             $oldRev = $request->query->get('oldRev');
+            \assert(null !== $oldRev);
         }
 
         if (null === $newRev) {
             $newRev = $request->query->get('newRev');
+            \assert(null !== $newRev);
         }
 
         $diff = $this->auditReader->diff($className, $id, $oldRev, $newRev);

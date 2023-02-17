@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Core;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Core;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -30,19 +30,15 @@ class ProfileAudit
     protected $id;
 
     /**
-     * @var string
-     *
      * @ORM\Column(type="text")
      */
-    private $biography;
+    private string $biography;
 
     /**
-     * @var UserAudit|null
-     *
      * @ORM\OneToOne(targetEntity="UserAudit", inversedBy="profile")
      * @ORM\JoinColumn(referencedColumnName="id", nullable=true)
      */
-    private $user;
+    private ?UserAudit $user = null;
 
     public function __construct(string $biography)
     {

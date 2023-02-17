@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -30,19 +30,15 @@ class Issue87ProjectComment
     protected $id;
 
     /**
-     * @var Issue87AbstractProject|null
-     *
-     * @ORM\ManytoOne(targetEntity="Issue87AbstractProject")
+     * @ORM\ManyToOne(targetEntity="Issue87AbstractProject")
      * @ORM\JoinColumn(name="a_join_column")
      */
-    private $project;
+    private ?Issue87AbstractProject $project = null;
 
     /**
-     * @var string|null
-     *
      * @ORM\Column(type="text")
      */
-    private $text;
+    private ?string $text = null;
 
     public function getId(): ?int
     {

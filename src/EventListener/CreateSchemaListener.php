@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace SimpleThings\EntityAudit\EventListener;
 
 use Doctrine\Common\EventSubscriber;
-use Doctrine\DBAL\Result;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\Table;
@@ -29,15 +28,14 @@ use SimpleThings\EntityAudit\Metadata\MetadataFactory;
 
 class CreateSchemaListener implements EventSubscriber
 {
-    /**
-     * @var AuditConfiguration
-     */
-    private $config;
+    private AuditConfiguration $config;
+
+    private MetadataFactory $metadataFactory;
 
     /**
-     * @var MetadataFactory
+     * @var string[]
      */
-    private $metadataFactory;
+    private array $defferedJoinTablesToCreate = [];
 
     public function __construct(AuditManager $auditManager)
     {
@@ -48,12 +46,13 @@ class CreateSchemaListener implements EventSubscriber
     /**
      * @todo Remove the "@return array" docblock when support for "symfony/error-handler" 5.x is dropped.
      *
-     * @return array
+     * @return string[]
      */
     public function getSubscribedEvents()
     {
         return [
             ToolEvents::postGenerateSchemaTable,
+            ToolEvents::postGenerateSchema,
         ];
     }
 
@@ -95,38 +94,50 @@ class CreateSchemaListener implements EventSubscriber
             throw new \Exception(sprintf('Inheritance type "%s" is not yet supported', $cm->inheritanceType));
         }
 
-        $pkColumns = $entityTable->getPrimaryKey()->getColumns();
+        $primaryKey = $entityTable->getPrimaryKey();
+        \assert(null !== $primaryKey);
+        $pkColumns = $primaryKey->getColumns();
         $pkColumns[] = $this->config->getRevisionFieldName();
         $revisionTable->setPrimaryKey($pkColumns);
         $revIndexName = $this->config->getRevisionFieldName().'_'.md5($revisionTable->getName()).'_idx';
         $revisionTable->addIndex([$this->config->getRevisionFieldName()], $revIndexName);
+
+        foreach ($cm->associationMappings as $associationMapping) {
+            if ($associationMapping['isOwningSide'] && isset($associationMapping['joinTable'])) {
+                if (isset($associationMapping['joinTable']['name'])) {
+                    if ($schema->hasTable($associationMapping['joinTable']['name'])) {
+                        $this->createRevisionJoinTableForJoinTable($schema, $associationMapping['joinTable']['name']);
+                    } else {
+                        $this->defferedJoinTablesToCreate[] = $associationMapping['joinTable']['name'];
+                    }
+                }
+            }
+        }
+
         $revisionForeignKeyName = $this->config->getRevisionFieldName().'_'.md5($revisionTable->getName()).'_fk';
 
-        $foreignColumnNames = $revisionsTable->getPrimaryKeyColumns();
-
         // TODO: Use always array_keys when dropping support for DBAL 2
-        if (!interface_exists(Result::class)) {
-            $foreignColumnNames = array_keys($foreignColumnNames);
+        $keyColumns = $revisionsTable->getPrimaryKeyColumns();
+        $firstColumn = current($keyColumns);
+        if ($firstColumn instanceof Column) {
+            /** @var string[] $foreignColumnNames */
+            $foreignColumnNames = array_keys($keyColumns);
+        } else {
+            /** @var string[] $foreignColumnNames */
+            $foreignColumnNames = $keyColumns;
         }
 
         $revisionTable->addForeignKeyConstraint($revisionsTable, [$this->config->getRevisionFieldName()], $foreignColumnNames, [], $revisionForeignKeyName);
     }
 
-    /**
-     * NEXT_MAJOR: Remove this method.
-     *
-     * @deprecated since sonata-project/entity-audit-bundle 1.4, will be removed in 2.0.
-     */
     public function postGenerateSchema(GenerateSchemaEventArgs $eventArgs): void
     {
         $schema = $eventArgs->getSchema();
-        $revisionsTable = $schema->createTable($this->config->getRevisionTableName());
-        $revisionsTable->addColumn('id', $this->config->getRevisionIdFieldType(), [
-            'autoincrement' => true,
-        ]);
-        $revisionsTable->addColumn('timestamp', Types::DATETIME_MUTABLE);
-        $revisionsTable->addColumn('username', Types::STRING)->setNotnull(false);
-        $revisionsTable->setPrimaryKey(['id']);
+        $this->createRevisionsTable($schema);
+
+        foreach ($this->defferedJoinTablesToCreate as $defferedJoinTableToCreate) {
+            $this->createRevisionJoinTableForJoinTable($schema, $defferedJoinTableToCreate);
+        }
     }
 
     /**
@@ -170,5 +181,36 @@ class CreateSchemaListener implements EventSubscriber
         $revisionsTable->setPrimaryKey(['id']);
 
         return $revisionsTable;
+    }
+
+    private function createRevisionJoinTableForJoinTable(Schema $schema, string $joinTableName): void
+    {
+        $joinTable = $schema->getTable($joinTableName);
+        $revisionJoinTableName = $this->config->getTablePrefix().$joinTable->getName().$this->config->getTableSuffix();
+
+        if ($schema->hasTable($revisionJoinTableName)) {
+            return;
+        }
+
+        $revisionJoinTable = $schema->createTable(
+            $this->config->getTablePrefix().$joinTable->getName().$this->config->getTableSuffix()
+        );
+        foreach ($joinTable->getColumns() as $column) {
+            /* @var Column $column */
+            $revisionJoinTable->addColumn(
+                $column->getName(),
+                $column->getType()->getName(),
+                ['notnull' => false, 'autoincrement' => false]
+            );
+        }
+        $revisionJoinTable->addColumn($this->config->getRevisionFieldName(), $this->config->getRevisionIdFieldType());
+        $revisionJoinTable->addColumn($this->config->getRevisionTypeFieldName(), 'string', ['length' => 4]);
+
+        $pk = $joinTable->getPrimaryKey();
+        $pkColumns = null !== $pk ? $pk->getColumns() : [];
+        $pkColumns[] = $this->config->getRevisionFieldName();
+        $revisionJoinTable->setPrimaryKey($pkColumns);
+        $revIndexName = $this->config->getRevisionFieldName().'_'.md5($revisionJoinTable->getName()).'_idx';
+        $revisionJoinTable->addIndex([$this->config->getRevisionFieldName()], $revIndexName);
     }
 }

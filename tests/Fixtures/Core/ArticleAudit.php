@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Core;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Core;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -51,11 +51,9 @@ class ArticleAudit
     protected $ignoreme;
 
     /**
-     * @var UserAudit
-     *
      * @ORM\ManyToOne(targetEntity="UserAudit")
      */
-    private $author;
+    private ?UserAudit $author;
 
     public function __construct(string $title, string $text, UserAudit $author, string $ignoreme)
     {

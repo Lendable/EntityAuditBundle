@@ -11,12 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Issue;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use SimpleThings\EntityAudit\Tests\BaseTest;
-use SimpleThings\EntityAudit\Tests\Fixtures\Issue\Issue9Address;
-use SimpleThings\EntityAudit\Tests\Fixtures\Issue\Issue9Customer;
+use Sonata\EntityAuditBundle\Tests\BaseTest;
+use Sonata\EntityAuditBundle\Tests\Fixtures\Issue\Issue9Address;
+use Sonata\EntityAuditBundle\Tests\Fixtures\Issue\Issue9Customer;
 
 final class Issue9Test extends BaseTest
 {
@@ -44,17 +44,27 @@ final class Issue9Test extends BaseTest
         $this->em->persist($customer);
         $this->em->persist($address);
 
-        $this->em->flush(); //#1
+        $this->em->flush(); // #1
 
         $reader = $this->auditManager->createAuditReader($this->em);
 
-        $aAddress = $reader->find(\get_class($address), $address->getId(), 1);
-        static::assertSame($customer->getId(), $aAddress->getCustomer()->getId());
+        $addressId = $address->getId();
+        static::assertNotNull($addressId);
 
-        /** @var Issue9Customer $aCustomer */
-        $aCustomer = $reader->find(\get_class($customer), $customer->getId(), 1);
+        $aAddress = $reader->find(Issue9Address::class, $addressId, 1);
+        static::assertNotNull($aAddress);
+        $aAddressCustomer = $aAddress->getCustomer();
+        static::assertNotNull($aAddressCustomer);
+        static::assertSame($customer->getId(), $aAddressCustomer->getId());
 
-        static::assertNotNull($aCustomer->getPrimaryAddress());
-        static::assertSame('NY, Red Street 6', $aCustomer->getPrimaryAddress()->getAddressText());
+        $customerId = $customer->getId();
+        static::assertNotNull($customerId);
+
+        $aCustomer = $reader->find(Issue9Customer::class, $customerId, 1);
+        static::assertNotNull($aCustomer);
+
+        $aPrimaryAddress = $aCustomer->getPrimaryAddress();
+        static::assertNotNull($aPrimaryAddress);
+        static::assertSame('NY, Red Street 6', $aPrimaryAddress->getAddressText());
     }
 }

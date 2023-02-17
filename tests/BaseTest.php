@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests;
+namespace Sonata\EntityAuditBundle\Tests;
 
 use Doctrine\Common\Proxy\AbstractProxyFactory;
 use Doctrine\DBAL\Connection;
@@ -21,10 +21,9 @@ use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Tools\SchemaTool;
-use Gedmo;
-use Lendable\Clock\Clock;
-use Lendable\Clock\SystemClock;
+use Gedmo\DoctrineExtensions;
 use PHPUnit\Framework\TestCase;
+use Psr\Clock\ClockInterface;
 use SimpleThings\EntityAudit\AuditConfiguration;
 use SimpleThings\EntityAudit\AuditManager;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
@@ -51,28 +50,25 @@ abstract class BaseTest extends TestCase
     /**
      * @var string[]
      *
-     * @phpstan-var class-string[]
+     * @phpstan-var list<class-string>
      */
     protected $schemaEntities = [];
 
     /**
      * @var string[]
      *
-     * @phpstan-var class-string[]
+     * @phpstan-var list<class-string>
      */
     protected $auditedEntities = [];
 
     /**
      * @var string[]
      *
-     * @phpstan-var array<string, class-string>
+     * @phpstan-var array<string, class-string<Type>>
      */
     protected $customTypes = [];
 
-    /**
-     * @var SchemaTool
-     */
-    private $schemaTool;
+    private ?SchemaTool $schemaTool = null;
 
     protected function setUp(): void
     {
@@ -98,15 +94,21 @@ abstract class BaseTest extends TestCase
         $config->setQueryCache(new ArrayAdapter());
         $config->setProxyDir(__DIR__.'/Proxies');
         $config->setAutoGenerateProxyClasses(AbstractProxyFactory::AUTOGENERATE_EVAL);
-        $config->setProxyNamespace('SimpleThings\EntityAudit\Tests\Proxies');
+        $config->setProxyNamespace('Sonata\EntityAuditBundle\Tests\Proxies');
 
-        $config->setMetadataDriverImpl($config->newDefaultAnnotationDriver([
-            realpath(__DIR__.'/Fixtures/Core'),
-            realpath(__DIR__.'/Fixtures/Issue'),
-            realpath(__DIR__.'/Fixtures/Relation'),
-        ], false));
+        $mappingPaths = [
+            __DIR__.'/Fixtures/Core',
+            __DIR__.'/Fixtures/Issue',
+            __DIR__.'/Fixtures/Relation',
+        ];
 
-        Gedmo\DoctrineExtensions::registerAnnotations();
+        if (version_compare(\PHP_VERSION, '8.1.0', '>=')) {
+            $mappingPaths[] = __DIR__.'/Fixtures/PHP81Issue';
+        }
+
+        $config->setMetadataDriverImpl($config->newDefaultAnnotationDriver($mappingPaths, false));
+
+        DoctrineExtensions::registerAnnotations();
 
         $connection = $this->_getConnection();
 
@@ -136,14 +138,17 @@ abstract class BaseTest extends TestCase
             return $this->schemaTool;
         }
 
-        return $this->schemaTool = new SchemaTool($this->getEntityManager());
+        $this->schemaTool = new SchemaTool($this->getEntityManager());
+
+        return $this->schemaTool;
     }
 
     protected function _getConnection(): Connection
     {
         if (!isset(self::$conn)) {
-            if (false !== getenv('DATABASE_URL')) {
-                $params = ['url' => getenv('DATABASE_URL')];
+            $url = getenv('DATABASE_URL');
+            if (false !== $url) {
+                $params = ['url' => $url];
             } else {
                 $params = [
                     'driver' => 'pdo_sqlite',
@@ -165,9 +170,7 @@ abstract class BaseTest extends TestCase
 
         $auditConfig = AuditConfiguration::forEntities($this->auditedEntities);
         $auditConfig->setGlobalIgnoreColumns(['ignoreme']);
-        $auditConfig->setUsernameCallable(static function (): string {
-            return 'beberlei';
-        });
+        $auditConfig->setUsernameCallable(static fn (): string => 'beberlei');
 
         $auditManager = new AuditManager($auditConfig, $this->getClock());
         $auditManager->registerEvents($this->_getConnection()->getEventManager());
@@ -175,17 +178,18 @@ abstract class BaseTest extends TestCase
         return $this->auditManager = $auditManager;
     }
 
-    protected function getClock(): Clock
+    protected function getClock(): ?ClockInterface
     {
-        return new SystemClock();
+        return null;
     }
 
     protected function setUpEntitySchema(): void
     {
         $em = $this->getEntityManager();
-        $classes = array_map(static function (string $value) use ($em): ClassMetadata {
-            return $em->getClassMetadata($value);
-        }, $this->schemaEntities);
+        $classes = array_map(
+            static fn (string $value): ClassMetadata => $em->getClassMetadata($value),
+            $this->schemaEntities
+        );
 
         $this->getSchemaTool()->createSchema($classes);
     }
@@ -193,9 +197,10 @@ abstract class BaseTest extends TestCase
     protected function tearDownEntitySchema(): void
     {
         $em = $this->getEntityManager();
-        $classes = array_map(static function (string $value) use ($em): ClassMetadata {
-            return $em->getClassMetadata($value);
-        }, $this->schemaEntities);
+        $classes = array_map(
+            static fn (string $value): ClassMetadata => $em->getClassMetadata($value),
+            $this->schemaEntities
+        );
 
         $this->getSchemaTool()->dropSchema($classes);
     }

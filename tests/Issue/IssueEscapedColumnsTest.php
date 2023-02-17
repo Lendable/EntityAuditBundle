@@ -11,10 +11,10 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Issue;
 
-use SimpleThings\EntityAudit\Tests\BaseTest;
-use SimpleThings\EntityAudit\Tests\Fixtures\Issue\EscapedColumnsEntity;
+use Sonata\EntityAuditBundle\Tests\BaseTest;
+use Sonata\EntityAuditBundle\Tests\Fixtures\Issue\EscapedColumnsEntity;
 
 final class IssueEscapedColumnsTest extends BaseTest
 {
@@ -26,9 +26,6 @@ final class IssueEscapedColumnsTest extends BaseTest
         EscapedColumnsEntity::class,
     ];
 
-    /**
-     * @doesNotPerformAssertions
-     */
     public function testEscapedColumns(): void
     {
         $e = new EscapedColumnsEntity();
@@ -39,6 +36,9 @@ final class IssueEscapedColumnsTest extends BaseTest
 
         $reader = $this->auditManager->createAuditReader($this->em);
 
-        $reader->find(\get_class($e), $e->getId(), 1);
+        $eId = $e->getId();
+        static::assertNotNull($eId);
+
+        $reader->find(EscapedColumnsEntity::class, $eId, 1);
     }
 }

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -30,18 +30,14 @@ class Issue31Reve
     protected $id;
 
     /**
-     * @var Issue31User|null
-     *
      * @ORM\OneToOne(targetEntity="Issue31User")
      */
-    private $user;
+    private ?Issue31User $user = null;
 
     /**
-     * @var string|null
-     *
      * @ORM\Column(type="string")
      */
-    private $titre;
+    private ?string $titre = null;
 
     public function getId(): ?int
     {

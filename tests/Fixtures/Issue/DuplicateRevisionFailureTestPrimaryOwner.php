@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -34,7 +34,7 @@ class DuplicateRevisionFailureTestPrimaryOwner extends DuplicateRevisionFailureT
      *     fetch="LAZY"
      * )
      */
-    private $elements;
+    private Collection $elements;
 
     /**
      * @var Collection<int, DuplicateRevisionFailureTestSecondaryOwner>
@@ -45,7 +45,7 @@ class DuplicateRevisionFailureTestPrimaryOwner extends DuplicateRevisionFailureT
      *     cascade={"persist", "remove"}
      * )
      */
-    private $secondaryOwners;
+    private Collection $secondaryOwners;
 
     public function __construct()
     {

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Core;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Core;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -33,11 +33,9 @@ abstract class AnimalAudit
     protected $id;
 
     /**
-     * @var string
-     *
      * @ORM\Column(type="string")
      */
-    private $name;
+    private string $name;
 
     public function __construct(string $name)
     {

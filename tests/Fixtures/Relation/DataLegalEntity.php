@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Relation;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Relation;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -23,11 +23,9 @@ use Doctrine\ORM\Mapping as ORM;
 class DataLegalEntity extends AbstractDataEntity
 {
     /**
-     * @var string|null
-     *
      * @ORM\Column(type="string")
      */
-    private $company;
+    private ?string $company = null;
 
     public function getCompany(): ?string
     {

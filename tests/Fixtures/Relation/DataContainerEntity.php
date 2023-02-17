@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Relation;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Relation;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -32,18 +32,14 @@ class DataContainerEntity
     protected $id;
 
     /**
-     * @var AbstractDataEntity|null
-     *
      * @ORM\OneToOne(targetEntity="AbstractDataEntity", inversedBy="dataContainer", cascade={"persist", "remove"})
      */
-    private $data;
+    private ?AbstractDataEntity $data = null;
 
     /**
-     * @var string|null
-     *
      * @ORM\Column(type="string")
      */
-    private $name;
+    private ?string $name = null;
 
     public function getId(): ?int
     {
@@ -55,7 +51,7 @@ class DataContainerEntity
         return $this->data;
     }
 
-    public function setData(AbstractDataEntity $data)
+    public function setData(AbstractDataEntity $data): void
     {
         $this->data = $data;
     }
@@ -65,7 +61,7 @@ class DataContainerEntity
         return $this->name;
     }
 
-    public function setName(string $name)
+    public function setName(string $name): void
     {
         $this->name = $name;
     }

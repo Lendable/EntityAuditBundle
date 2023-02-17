@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Issue;
 
 use Gedmo\SoftDeleteable\SoftDeleteableListener;
-use SimpleThings\EntityAudit\Tests\BaseTest;
-use SimpleThings\EntityAudit\Tests\Fixtures\Issue\Issue111Entity;
+use Sonata\EntityAuditBundle\Tests\BaseTest;
+use Sonata\EntityAuditBundle\Tests\Fixtures\Issue\Issue111Entity;
 
 final class Issue111Test extends BaseTest
 {
@@ -35,15 +35,16 @@ final class Issue111Test extends BaseTest
         $e->setStatus('test status');
 
         $this->em->persist($e);
-        $this->em->flush(); //#1
+        $this->em->flush(); // #1
 
         $this->em->remove($e);
-        $this->em->flush(); //#2
+        $this->em->flush(); // #2
 
         $reader = $this->auditManager->createAuditReader($this->em);
 
         $ae = $reader->find(Issue111Entity::class, 1, 2);
+        static::assertNotNull($ae);
 
-        static::assertInstanceOf('DateTime', $ae->getDeletedAt());
+        static::assertInstanceOf(\DateTime::class, $ae->getDeletedAt());
     }
 }

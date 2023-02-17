@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Doctrine\ORM\EntityManager;
-use Lendable\Clock\Clock;
+use Psr\Clock\ClockInterface;
 use SimpleThings\EntityAudit\AuditConfiguration;
 use SimpleThings\EntityAudit\AuditManager;
 use SimpleThings\EntityAudit\AuditReader;
@@ -44,7 +44,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             ->public()
             ->args([
                 new ReferenceConfigurator('simplethings_entityaudit.config'),
-                new ReferenceConfigurator(Clock::class),
+                (new ReferenceConfigurator(ClockInterface::class))->nullOnInvalid(),
             ])
             ->alias(AuditManager::class, 'simplethings_entityaudit.manager')
                 ->public()
@@ -63,7 +63,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
             ->tag('doctrine.event_subscriber', ['connection' => '%simplethings.entityaudit.connection%'])
             ->args([
                 new ReferenceConfigurator('simplethings_entityaudit.manager'),
-                new ReferenceConfigurator(Clock::class),
+                (new ReferenceConfigurator(ClockInterface::class))->nullOnInvalid(),
             ])
 
         ->set('simplethings_entityaudit.create_schema_listener', CreateSchemaListener::class)

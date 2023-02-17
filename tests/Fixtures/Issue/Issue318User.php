@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -30,11 +30,9 @@ class Issue318User
     protected $id;
 
     /**
-     * @var string|null
-     *
      * @ORM\Column(type="string", nullable=false, length=255)
      */
-    private $alias;
+    private ?string $alias = null;
 
     public function getId(): ?int
     {

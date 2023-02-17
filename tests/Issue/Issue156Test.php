@@ -11,12 +11,12 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Issue;
 
-use SimpleThings\EntityAudit\Tests\BaseTest;
-use SimpleThings\EntityAudit\Tests\Fixtures\Issue\Issue156Client;
-use SimpleThings\EntityAudit\Tests\Fixtures\Issue\Issue156Contact;
-use SimpleThings\EntityAudit\Tests\Fixtures\Issue\Issue156ContactTelephoneNumber;
+use Sonata\EntityAuditBundle\Tests\BaseTest;
+use Sonata\EntityAuditBundle\Tests\Fixtures\Issue\Issue156Client;
+use Sonata\EntityAuditBundle\Tests\Fixtures\Issue\Issue156Contact;
+use Sonata\EntityAuditBundle\Tests\Fixtures\Issue\Issue156ContactTelephoneNumber;
 
 final class Issue156Test extends BaseTest
 {
@@ -32,9 +32,6 @@ final class Issue156Test extends BaseTest
         Issue156Client::class,
     ];
 
-    /**
-     * @doesNotPerformAssertions
-     */
     public function testIssue156(): void
     {
         $client = new Issue156Client();
@@ -47,7 +44,10 @@ final class Issue156Test extends BaseTest
         $this->em->persist($number);
         $this->em->flush();
 
+        $numberId = $number->getId();
+        static::assertNotNull($numberId);
+
         $auditReader = $this->auditManager->createAuditReader($this->em);
-        $auditReader->find(\get_class($number), $number->getId(), 1);
+        $auditReader->find(Issue156ContactTelephoneNumber::class, $numberId, 1);
     }
 }

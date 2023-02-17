@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -38,7 +38,7 @@ class Issue156Contact
      *
      * @ORM\OneToMany(targetEntity="Issue156ContactTelephoneNumber", mappedBy="contact")
      */
-    private $telephoneNumbers;
+    private Collection $telephoneNumbers;
 
     public function __construct()
     {

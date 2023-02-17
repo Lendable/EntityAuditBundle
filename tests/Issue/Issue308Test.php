@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Issue;
 
 use Doctrine\Common\Collections\Collection;
-use SimpleThings\EntityAudit\Tests\BaseTest;
-use SimpleThings\EntityAudit\Tests\Fixtures\Issue\Issue308User;
+use Sonata\EntityAuditBundle\Tests\BaseTest;
+use Sonata\EntityAuditBundle\Tests\Fixtures\Issue\Issue308User;
 
 final class Issue308Test extends BaseTest
 {
@@ -40,11 +40,16 @@ final class Issue308Test extends BaseTest
 
         $auditReader = $this->auditManager->createAuditReader($this->em);
         $auditReader->setLoadAuditedCollections(true);
-        $userClass = \get_class($user);
-        $revisions = $auditReader->findRevisions($userClass, $user->getId());
+
+        $userId = $user->getId();
+        static::assertNotNull($userId);
+
+        $revisions = $auditReader->findRevisions(Issue308User::class, $userId);
         static::assertCount(1, $revisions);
         $revision = reset($revisions);
-        $auditedUser = $auditReader->find($userClass, ['id' => $user->getId()], $revision->getRev());
+        static::assertNotFalse($revision);
+        $auditedUser = $auditReader->find(Issue308User::class, ['id' => $userId], $revision->getRev());
+        static::assertNotNull($auditedUser);
 
         static::assertInstanceOf(Collection::class, $auditedUser->getChildren());
     }

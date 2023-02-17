@@ -16,24 +16,25 @@ namespace SimpleThings\EntityAudit\Metadata;
 class MetadataFactory
 {
     /**
-     * @var string[]
+     * @var array<string, int|string>
      *
-     * @phpstan-var class-string[]
+     * @phpstan-var array<class-string, int|string>
      */
-    private $auditedEntities = [];
+    private array $auditedEntities = [];
 
     /**
-     * @phpstan-param array<class-string, mixed> $auditedEntities
+     * @phpstan-param class-string[] $auditedEntities
      */
     public function __construct(array $auditedEntities)
     {
-        $this->auditedEntities = array_flip(array_filter($auditedEntities, static function ($record): bool {
-            return \is_string($record) || \is_int($record);
-        }));
+        // NEXT_MAJOR: Remove array_filter call.
+        $this->auditedEntities = array_flip(array_filter($auditedEntities));
     }
 
     /**
      * @param string $entity
+     *
+     * @return bool
      *
      * @phpstan-param class-string $entity
      */
@@ -43,9 +44,9 @@ class MetadataFactory
     }
 
     /**
-     * @return array<string, string|int>
+     * @return array<string|int, string>
      *
-     * @phpstan-return array<class-string, string|int>
+     * @phpstan-return array<string|int, class-string>
      */
     public function getAllClassNames()
     {

@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -30,18 +30,14 @@ class Issue9Address
     protected $id;
 
     /**
-     * @var string|null
-     *
      * @ORM\Column
      */
-    private $addressText;
+    private ?string $addressText = null;
 
     /**
-     * @var Issue9Customer|null
-     *
      * @ORM\ManyToOne(targetEntity="Issue9Customer", inversedBy="addresses")
      */
-    private $customer;
+    private ?Issue9Customer $customer = null;
 
     public function getId(): ?int
     {

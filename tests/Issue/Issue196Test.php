@@ -11,11 +11,11 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Issue;
 
-use SimpleThings\EntityAudit\Tests\BaseTest;
-use SimpleThings\EntityAudit\Tests\Fixtures\Issue\Issue196Entity;
-use SimpleThings\EntityAudit\Tests\Types\Issue196Type;
+use Sonata\EntityAuditBundle\Tests\BaseTest;
+use Sonata\EntityAuditBundle\Tests\Fixtures\Issue\Issue196Entity;
+use Sonata\EntityAuditBundle\Tests\Types\Issue196Type;
 
 final class Issue196Test extends BaseTest
 {
@@ -39,11 +39,17 @@ final class Issue196Test extends BaseTest
         $this->em->flush();
         $this->em->clear();
 
-        $persistedEntity = $this->em->find(\get_class($entity), $entity->getId());
+        $entityId = $entity->getId();
+        static::assertNotNull($entityId);
+
+        $persistedEntity = $this->em->find(Issue196Entity::class, $entityId);
+        static::assertNotNull($persistedEntity);
 
         $auditReader = $this->auditManager->createAuditReader($this->em);
-        $currentRevision = $auditReader->getCurrentRevision(\get_class($entity), $entity->getId());
-        $currentRevisionEntity = $auditReader->find(\get_class($entity), $entity->getId(), $currentRevision);
+        $currentRevision = $auditReader->getCurrentRevision(Issue196Entity::class, $entityId);
+        static::assertNotNull($currentRevision);
+        $currentRevisionEntity = $auditReader->find(Issue196Entity::class, $entityId, $currentRevision);
+        static::assertNotNull($currentRevisionEntity);
 
         static::assertSame(
             $persistedEntity->getSqlConversionField(),

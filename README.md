@@ -129,8 +129,8 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\Common\EventManager;
 use SimpleThings\EntityAudit\AuditConfiguration;
 use SimpleThings\EntityAudit\AuditManager;
-use SimpleThings\EntityAudit\Tests\ArticleAudit;
-use SimpleThings\EntityAudit\Tests\UserAudit;
+use Sonata\EntityAuditBundle\Tests\ArticleAudit;
+use Sonata\EntityAuditBundle\Tests\UserAudit;
 
 $auditConfig = new AuditConfiguration();
 $auditConfig->setAuditedEntityClasses([ArticleAudit::class, UserAudit::class]);
@@ -174,7 +174,7 @@ to that entity was made in a revision before the given one:
 
 ```php
 $articleAudit = $auditReader->find(
-    SimpleThings\EntityAudit\Tests\ArticleAudit::class,
+    Sonata\EntityAuditBundle\Tests\ArticleAudit::class,
     $id = 1,
     $rev = 10
 );
@@ -188,7 +188,7 @@ in that old version.
 
 ```php
 $revisions = $auditReader->findRevisions(
-    SimpleThings\EntityAudit\Tests\ArticleAudit::class,
+    Sonata\EntityAuditBundle\Tests\ArticleAudit::class,
     $id = 1
 );
 ```
@@ -226,7 +226,7 @@ class ChangedEntity
 
 ```php
 $revision = $auditReader->getCurrentRevision(
-    'SimpleThings\EntityAudit\Tests\ArticleAudit',
+    'Sonata\EntityAuditBundle\Tests\ArticleAudit',
     $id = 3
 );
 ```
@@ -286,4 +286,3 @@ This provides you with a few different routes:
 * Currently only works with auto-increment databases
 * Proper metadata mapping is necessary, allow to disable versioning for fields and associations.
 * It does NOT work with Joined-Table-Inheritance (Single Table Inheritance should work, but not tested)
-* Many-To-Many associations are NOT versioned

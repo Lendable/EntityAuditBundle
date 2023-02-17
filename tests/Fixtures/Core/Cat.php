@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Core;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Core;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -21,11 +21,9 @@ use Doctrine\ORM\Mapping as ORM;
 class Cat extends PetAudit
 {
     /**
-     * @var string
-     *
      * @ORM\Column(type="string", name="cute_cat_color")
      */
-    private $color;
+    private string $color;
 
     public function __construct(string $name, string $color)
     {

@@ -2,6 +2,41 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.10.1](https://github.com/sonata-project/EntityAuditBundle/compare/1.10.0...1.10.1) - 2023-02-14
+### Fixed
+- [[#539](https://github.com/sonata-project/EntityAuditBundle/pull/539)] Not null constraint violation during many to many association audit recording ([@X-Coder264](https://github.com/X-Coder264))
+
+## [1.10.0](https://github.com/sonata-project/EntityAuditBundle/compare/1.9.1...1.10.0) - 2023-02-13
+### Added
+- [[#536](https://github.com/sonata-project/EntityAuditBundle/pull/536)] Support for PSR ClockInterface ([@X-Coder264](https://github.com/X-Coder264))
+
+### Fixed
+- [[#537](https://github.com/sonata-project/EntityAuditBundle/pull/537)] Schema creation for self referencing many to many association with class table inheritance ([@X-Coder264](https://github.com/X-Coder264))
+
+## [1.9.1](https://github.com/sonata-project/EntityAuditBundle/compare/1.9.0...1.9.1) - 2023-02-06
+### Fixed
+- [[#534](https://github.com/sonata-project/EntityAuditBundle/pull/534)] Audit query for Doctrine ORM >= 2.14.1 for entities with enumType column mapping ([@X-Coder264](https://github.com/X-Coder264))
+
+## [1.9.0](https://github.com/sonata-project/EntityAuditBundle/compare/1.8.0...1.9.0) - 2022-10-10
+### Added
+- [[#509](https://github.com/sonata-project/EntityAuditBundle/pull/509)] Support for ManyToMany ([@pietaj](https://github.com/pietaj))
+
+### Removed
+- [[#497](https://github.com/sonata-project/EntityAuditBundle/pull/497)] Support of Symfony 5.3 ([@franmomu](https://github.com/franmomu))
+
+## [1.8.0](https://github.com/sonata-project/EntityAuditBundle/compare/1.7.0...1.8.0) - 2022-05-21
+### Added
+- [[#488](https://github.com/sonata-project/EntityAuditBundle/pull/488)] Specify iterable types ([@franmomu](https://github.com/franmomu))
+- [[#490](https://github.com/sonata-project/EntityAuditBundle/pull/490)] Added support for `doctrine/persistence` 3 ([@franmomu](https://github.com/franmomu))
+
+### Changed
+- [[#488](https://github.com/sonata-project/EntityAuditBundle/pull/488)] Make `AuditReader` not generic ([@franmomu](https://github.com/franmomu))
+- [[#484](https://github.com/sonata-project/EntityAuditBundle/pull/484)] Change composer license to MIT ([@mpoiriert](https://github.com/mpoiriert))
+
+### Fixed
+- [[#491](https://github.com/sonata-project/EntityAuditBundle/pull/491)] Deprecation warning about using `SQLResultCasing` internal trait ([@franmomu](https://github.com/franmomu))
+- [[#486](https://github.com/sonata-project/EntityAuditBundle/pull/486)] Fixed some phpdoc types ([@franmomu](https://github.com/franmomu))
+
 ## [1.7.0](https://github.com/sonata-project/EntityAuditBundle/compare/1.6.1...1.7.0) - 2022-02-03
 ### Deprecated
 - [[#472](https://github.com/sonata-project/EntityAuditBundle/pull/472)] Constructing `TokenStorageUsernameCallable` with an instance of `Container`, use an instance of `TokenStorageInterface` instead ([@franmomu](https://github.com/franmomu))

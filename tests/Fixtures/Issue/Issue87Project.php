@@ -11,7 +11,7 @@ declare(strict_types=1);
  * file that was distributed with this source code.
  */
 
-namespace SimpleThings\EntityAudit\Tests\Fixtures\Issue;
+namespace Sonata\EntityAuditBundle\Tests\Fixtures\Issue;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -22,11 +22,9 @@ use Doctrine\ORM\Mapping as ORM;
 class Issue87Project extends Issue87AbstractProject
 {
     /**
-     * @var string|null
-     *
      * @ORM\Column(type="string")
      */
-    private $someProperty;
+    private ?string $someProperty = null;
 
     public function getSomeProperty(): ?string
     {
