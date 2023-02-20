@@ -162,6 +162,8 @@ class LogRevisionsListener implements EventSubscriber
 
                     $columnName = $meta->associationMappings[$idField]['joinColumns'][0]['name'];
 
+                    \assert(\array_key_exists(0, $foreignIdFields));
+
                     $reflField = $foreignMeta->reflFields[$foreignIdFields[0]];
 
                     \assert(null !== $reflField);
