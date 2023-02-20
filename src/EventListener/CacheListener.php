@@ -17,7 +17,7 @@ use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Events;
 use SimpleThings\EntityAudit\AuditReader;
 
-class CacheListener implements EventSubscriber
+final class CacheListener implements EventSubscriber
 {
     private AuditReader $auditReader;
 
@@ -28,9 +28,7 @@ class CacheListener implements EventSubscriber
 
     public function getSubscribedEvents(): array
     {
-        return [
-            Events::onClear,
-        ];
+        return [Events::onClear];
     }
 
     public function onClear(): void
