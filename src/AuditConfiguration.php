@@ -72,7 +72,7 @@ class AuditConfiguration
     {
         $tableName = $metadata->getTableName();
 
-        if (null !== $metadata->getSchemaName()) {
+        if (null !== $metadata->getSchemaName() && '' !== $metadata->getSchemaName()) {
             $tableName = $metadata->getSchemaName().'.'.$tableName;
         }
 
