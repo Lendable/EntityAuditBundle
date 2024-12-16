@@ -11,7 +11,7 @@ jobs:
     test-mysql:
         name: PHP ${{ matrix.php-version }} + MySQL + highest
 
-        runs-on: ubuntu-latest
+        runs-on: [ 'lendable-medium-dind-x64-linux' ]
 
         continue-on-error: false
 
@@ -60,7 +60,7 @@ jobs:
     test-postgres:
         name: PHP ${{ matrix.php-version }} + PostgreSQL + highest
 
-        runs-on: ubuntu-latest
+        runs-on: [ 'lendable-medium-dind-x64-linux' ]
 
         continue-on-error: false
 
